@@ -51,6 +51,7 @@ async function run() {
 
     const mainDB = client.db('ElectricMuseumDB'); // << ----- main Database here -----
     const userCollection = mainDB.collection('users');
+    const productCollection = mainDB.collection('products');
 
     // All Users ------------------
     app.get('/users', async (req, res) => {
@@ -96,6 +97,13 @@ async function run() {
       }
     });
 
+
+    
+    // get all products ------------------
+    app.get('/products', async (req, res) => {
+      const result = await productCollection.find().toArray();
+      res.send(result);
+    });
 
 
     // Send a ping to confirm a successful connection
