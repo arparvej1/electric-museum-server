@@ -140,7 +140,7 @@ async function run() {
 
     app.get('/productsCount', async (req, res) => {
       const item = req.query.filterText;
-      let searchText = {}; 
+      let searchText = {};
 
       if (item) {
         searchText = {
@@ -155,6 +155,30 @@ async function run() {
       const result = await productCollection.find(searchText).toArray();
       const count = result.length;
       res.send({ count });
+    });
+
+    app.get('/productsLimit', async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      console.log('pagination query', page, size);
+
+      const item = req.query.filterText;
+      let searchText = {};
+      if (item) {
+        searchText = {
+          $or: [
+            { ProductName: { $regex: item, $options: 'i' } },
+            { BrandName: { $regex: item, $options: 'i' } },
+            { Category: { $regex: item, $options: 'i' } }
+          ]
+        };
+      }
+
+      const result = await productCollection.find(searchText)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
     });
 
 
