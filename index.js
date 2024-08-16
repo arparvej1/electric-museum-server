@@ -26,6 +26,25 @@ const client = new MongoClient(uri, {
   }
 });
 
+// Get current date and time ------------------- 
+const getCurrentDateTime = () => {
+  const months = [
+    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+  ];
+
+  // Get current date and time in local time
+  const currentDateTime = new Date();
+
+  // Format date and time
+  const day = currentDateTime.getDate().toString().padStart(2, '0');
+  const month = months[currentDateTime.getMonth()];
+  const year = currentDateTime.getFullYear();
+  const time = currentDateTime.toLocaleTimeString('en-US', { hour12: true });
+
+  return `${day}-${month}-${year}, ${time}`;
+};
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -39,6 +58,30 @@ async function run() {
       res.send(result);
     });
 
+    // --- received user from client for userRegister
+    app.post('/userRegister', async (req, res) => {
+      const user = req.body;
+      const { name, photo_url, email } = user;
+
+      // Validate email and mobileNumber to prevent duplicates
+      const existingUserWithEmail = await userCollection.findOne({ email: email });
+      if (existingUserWithEmail) {
+        return res.status(400).send({ error: 'Email already exists' });
+      }
+
+      const newUser = {
+        name,
+        photo_url,
+        email,
+        creationTime: getCurrentDateTime(),
+        lastLogInTime: getCurrentDateTime()
+      };
+
+      const result = await userCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -49,11 +92,11 @@ async function run() {
 run().catch(console.dir);
 
 // ---------- Server is running .......
-app.get('/',  (req, res) => {
+app.get('/', (req, res) => {
   res.send('Server is running...')
 });
 
-app.listen(port, ()=>{
+app.listen(port, () => {
   console.log(`Server is running port: ${port}
   Link: http://localhost:${port}`);
 });
