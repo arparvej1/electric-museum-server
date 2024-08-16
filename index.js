@@ -157,17 +157,17 @@ async function run() {
       res.send({ count });
     });
 
-      app.get('/productsLimit', async (req, res) => {
+    app.get('/productsLimit', async (req, res) => {
       const page = parseInt(req.query.page) || 0;
       const size = parseInt(req.query.size) || 10;
-    
+
       // Determine the sorting criteria
       const sortBy = req.query.sortBy || 'ProductCreationDateAndTime'; // default to date
       const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // -1 for descending, 1 for ascending
-    
+
       const item = req.query.filterText;
       let searchText = {};
-    
+
       if (item) {
         searchText = {
           $or: [
@@ -177,29 +177,56 @@ async function run() {
           ]
         };
       }
-    
+
       try {
         const result = await productCollection.find(searchText)
           .sort({ [sortBy]: sortOrder }) // Apply sorting based on query parameters
           .skip(page * size)
           .limit(size)
           .toArray();
-    
+
         res.send(result);
       } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).send({ message: 'Internal server error' });
       }
     });
-    
-    
-        
+
     // ---- send single product
     app.get('/product/:productId', async (req, res) => {
       const id = req.params.productId;
       const query = { _id: new ObjectId(id) }
       const result = await productCollection.findOne(query);
       res.send(result);
+    });
+
+    // Get unique brands
+    app.get('/brands', async (req, res) => {
+      try {
+        const brands = await productCollection.aggregate([
+          { $group: { _id: "$BrandName" } },
+          { $project: { _id: 0, BrandName: "$_id" } }
+        ]).toArray();
+        res.send(brands.map(item => item.BrandName));
+      } catch (error) {
+        console.error('Error fetching brands:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
+    });
+
+
+    // Get unique categories
+    app.get('/categories', async (req, res) => {
+      try {
+        const categories = await productCollection.aggregate([
+          { $group: { _id: "$Category" } }, // Group by the Category field
+          { $project: { _id: 0, Category: "$_id" } } // Project the category field
+        ]).toArray();
+        res.send(categories.map(item => item.Category)); // Send only the category values
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
     });
 
 
