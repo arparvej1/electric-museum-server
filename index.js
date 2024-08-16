@@ -151,6 +151,32 @@ async function run() {
           ]
         };
       }
+
+      // Add brand filter
+      const brand = req.query.brand;
+      if (brand) {
+        searchText.BrandName = brand;
+      }
+
+      // Add category filter
+      const category = req.query.category;
+      if (category) {
+        searchText.Category = category;
+      }
+
+      // Add price range filter
+      const minPrice = parseFloat(req.query.minPrice);
+      const maxPrice = parseFloat(req.query.maxPrice);
+      if (!isNaN(minPrice) || !isNaN(maxPrice)) {
+        searchText.Price = {};
+        if (!isNaN(minPrice)) {
+          searchText.Price.$gte = minPrice;
+        }
+        if (!isNaN(maxPrice)) {
+          searchText.Price.$lte = maxPrice;
+        }
+      }
+
       // const count = productCollection.estimatedDocumentCount();
       const result = await productCollection.find(searchText).toArray();
       const count = result.length;
@@ -159,23 +185,48 @@ async function run() {
 
     app.get('/productsLimit', async (req, res) => {
       const page = parseInt(req.query.page) || 0;
-      const size = parseInt(req.query.size) || 10;
+      const size = parseInt(req.query.size) || 9;
 
       // Determine the sorting criteria
-      const sortBy = req.query.sortBy || 'ProductCreationDateAndTime'; // default to date
+      const sortBy = req.query.sortBy || 'Price'; // default to Price
       const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // -1 for descending, 1 for ascending
 
-      const item = req.query.filterText;
+      // Initialize the search filter object
       let searchText = {};
 
+      // Add text search filter
+      const item = req.query.filterText;
       if (item) {
-        searchText = {
-          $or: [
-            { ProductName: { $regex: item, $options: 'i' } },
-            { BrandName: { $regex: item, $options: 'i' } },
-            { Category: { $regex: item, $options: 'i' } }
-          ]
-        };
+        searchText.$or = [
+          { ProductName: { $regex: item, $options: 'i' } },
+          { BrandName: { $regex: item, $options: 'i' } },
+          { Category: { $regex: item, $options: 'i' } }
+        ];
+      }
+
+      // Add brand filter
+      const brand = req.query.brand;
+      if (brand) {
+        searchText.BrandName = brand;
+      }
+
+      // Add category filter
+      const category = req.query.category;
+      if (category) {
+        searchText.Category = category;
+      }
+
+      // Add price range filter
+      const minPrice = parseFloat(req.query.minPrice);
+      const maxPrice = parseFloat(req.query.maxPrice);
+      if (!isNaN(minPrice) || !isNaN(maxPrice)) {
+        searchText.Price = {};
+        if (!isNaN(minPrice)) {
+          searchText.Price.$gte = minPrice;
+        }
+        if (!isNaN(maxPrice)) {
+          searchText.Price.$lte = maxPrice;
+        }
       }
 
       try {
@@ -192,7 +243,7 @@ async function run() {
       }
     });
 
-    // ---- send single product
+
     app.get('/product/:productId', async (req, res) => {
       const id = req.params.productId;
       const query = { _id: new ObjectId(id) }
@@ -213,7 +264,6 @@ async function run() {
         res.status(500).send({ message: 'Internal server error' });
       }
     });
-
 
     // Get unique categories
     app.get('/categories', async (req, res) => {
