@@ -81,6 +81,22 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/checkEmail/:email', async (req, res) => {
+      const email = req.params.email;
+      try {
+        const result = await userCollection.findOne({ email });
+        if (result) {
+          res.send({ exists: true }); // Email exists
+        } else {
+          res.send({ exists: false }); // Email does not exist
+        }
+      } catch (error) {
+        console.error('Error checking if email exists:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
+    });
+
+
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
