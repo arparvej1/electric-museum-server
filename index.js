@@ -181,6 +181,15 @@ async function run() {
       res.send(result);
     });
 
+    
+    // ---- send single product
+    app.get('/product/:productId', async (req, res) => {
+      const id = req.params.productId;
+      const query = { _id: new ObjectId(id) }
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
