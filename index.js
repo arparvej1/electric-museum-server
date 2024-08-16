@@ -157,13 +157,17 @@ async function run() {
       res.send({ count });
     });
 
-    app.get('/productsLimit', async (req, res) => {
-      const page = parseInt(req.query.page);
-      const size = parseInt(req.query.size);
-      console.log('pagination query', page, size);
-
+      app.get('/productsLimit', async (req, res) => {
+      const page = parseInt(req.query.page) || 0;
+      const size = parseInt(req.query.size) || 10;
+    
+      // Determine the sorting criteria
+      const sortBy = req.query.sortBy || 'ProductCreationDateAndTime'; // default to date
+      const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // -1 for descending, 1 for ascending
+    
       const item = req.query.filterText;
       let searchText = {};
+    
       if (item) {
         searchText = {
           $or: [
@@ -173,15 +177,23 @@ async function run() {
           ]
         };
       }
-
-      const result = await productCollection.find(searchText)
-        .skip(page * size)
-        .limit(size)
-        .toArray();
-      res.send(result);
-    });
-
     
+      try {
+        const result = await productCollection.find(searchText)
+          .sort({ [sortBy]: sortOrder }) // Apply sorting based on query parameters
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+    
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
+    });
+    
+    
+        
     // ---- send single product
     app.get('/product/:productId', async (req, res) => {
       const id = req.params.productId;
