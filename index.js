@@ -138,6 +138,26 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/productsCount', async (req, res) => {
+      const item = req.query.filterText;
+      let searchText = {}; 
+
+      if (item) {
+        searchText = {
+          $or: [
+            { ProductName: { $regex: item, $options: 'i' } },
+            { BrandName: { $regex: item, $options: 'i' } },
+            { Category: { $regex: item, $options: 'i' } }
+          ]
+        };
+      }
+      // const count = productCollection.estimatedDocumentCount();
+      const result = await productCollection.find(searchText).toArray();
+      const count = result.length;
+      res.send({ count });
+    });
+
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
