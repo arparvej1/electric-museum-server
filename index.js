@@ -82,6 +82,7 @@ async function run() {
       res.send(result);
     });
 
+    // --- checkEmail exists -------
     app.get('/checkEmail/:email', async (req, res) => {
       const email = req.params.email;
       try {
@@ -98,7 +99,23 @@ async function run() {
     });
 
 
-    
+    // --- check User Admin -------
+    app.get('/checkAdmin/:email', async (req, res) => {
+      const email = req.params.email;
+      try {
+        const result = await userCollection.findOne({ email });
+        if (result.role === "admin") {
+          res.send({ admin: true }); // Email exists
+        } else {
+          res.send({ admin: false }); // Email does not exist
+        }
+      } catch (error) {
+        console.error('Error checking if email exists:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
+    });
+
+
     // get all products ------------------
     app.get('/products', async (req, res) => {
       const result = await productCollection.find().toArray();
