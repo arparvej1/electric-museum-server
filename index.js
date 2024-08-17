@@ -53,6 +53,7 @@ async function run() {
     const userCollection = mainDB.collection('users');
     const productCollection = mainDB.collection('products');
     const subscriberCollection = mainDB.collection('subscribers');
+    const reviewCollection = mainDB.collection('reviews');
 
     // All Users ------------------
     app.get('/users', async (req, res) => {
@@ -281,6 +282,20 @@ async function run() {
     });
 
 
+    // --- send reviews
+    app.get('/reviews', async (req, res) => {
+      const cursor = reviewCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    
+    // --- received reviews from client
+    app.post('/reviews', async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await reviewCollection.insertOne(item);
+      res.send(result);
+    });
 
     // --- received newSubscriber from client
     app.post('/subscriber', async (req, res) => {
