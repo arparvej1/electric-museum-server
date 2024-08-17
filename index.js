@@ -288,12 +288,34 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-    
+
     // --- received reviews from client
     app.post('/reviews', async (req, res) => {
       const item = req.body;
       console.log(item);
       const result = await reviewCollection.insertOne(item);
+      res.send(result);
+    });
+
+
+    // ----- reviews -----
+    app.get('/reviews/:id', async (req, res) => {
+      const productId = req.params.id;
+      const query = { productId: productId };
+      console.log(query);
+
+      const result = await reviewCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // ----- myReviews -----
+    app.get('/myReviews', async (req, res) => {
+      const productId = req.query.productId;
+      const email = req.query.email;
+      const query = { reviewerEmail: email, productId: productId };
+      console.log(query);
+
+      const result = await reviewCollection.find(query).toArray();
       res.send(result);
     });
 
