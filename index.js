@@ -308,6 +308,21 @@ async function run() {
       res.send(result);
     });
 
+    // ----- productRating -----
+    app.get('/productRating/:id', async (req, res) => {
+      const productId = req.params.id;
+      const query = { productId: productId };
+      console.log(query);
+
+      const reviews = await reviewCollection.find(query).toArray();
+
+      // Calculate the average rating
+      const totalRatings = reviews.reduce((acc, review) => acc + parseFloat(review.rating), 0);
+      const averageRating = reviews.length > 0 ? (totalRatings / reviews.length).toFixed(1) : 0;
+
+      res.send({ averageRating });
+    });
+
     // ----- myReviews -----
     app.get('/myReviews', async (req, res) => {
       const productId = req.query.productId;
