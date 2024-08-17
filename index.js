@@ -52,6 +52,7 @@ async function run() {
     const mainDB = client.db('ElectricMuseumDB'); // << ----- main Database here -----
     const userCollection = mainDB.collection('users');
     const productCollection = mainDB.collection('products');
+    const subscriberCollection = mainDB.collection('subscribers');
 
     // All Users ------------------
     app.get('/users', async (req, res) => {
@@ -277,6 +278,25 @@ async function run() {
         console.error('Error fetching categories:', error);
         res.status(500).send({ message: 'Internal server error' });
       }
+    });
+
+
+
+    // --- received newSubscriber from client
+    app.post('/subscriber', async (req, res) => {
+      const subscriber = req.body;
+      console.log(subscriber);
+      const result = await subscriberCollection.insertOne(subscriber);
+      res.send(result);
+    });
+
+    // --- newSubscriber check
+    app.get('/checkSubscriber', async (req, res) => {
+      const newSubscriber = req.query.email;
+      let filter = { subscribeEmail: newSubscriber };
+      const result = await subscriberCollection.find(filter).toArray();
+      const subscribed = result.length ? true : false;
+      res.send({ subscribed });
     });
 
 
